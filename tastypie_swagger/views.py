@@ -7,6 +7,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import reverse
 from django.conf import settings
 
+from tastypie.api import Api
+
 from .mapping import ResourceSwaggerMapping
 
 
@@ -26,6 +28,8 @@ class TastypieApiMixin(object):
             path, attr = tastypie_api_module.rsplit('.', 1)
             try:
                 tastypie_api = getattr(sys.modules[path], attr, None)
+                if not isinstance(tastypie_api, Api) and callable(tastypie_api):
+                    tastypie_api = tastypie_api()
             except KeyError:
                 raise ImproperlyConfigured("%s is not a valid python path" % path)
             if not tastypie_api:
