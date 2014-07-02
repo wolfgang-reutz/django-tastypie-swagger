@@ -18,17 +18,19 @@ class TastypieApiMixin(object):
     """
     def __init__(self, *args, **kwargs):
         super(TastypieApiMixin, self).__init__(*args, **kwargs)
-        tastypie_api_module = getattr(settings, 'TASTYPIE_SWAGGER_API_MODULE', None)
-        if not tastypie_api_module:
+        self.tastypie_api_list = []
+        tastypie_api_module_list = getattr(settings, 'TASTYPIE_SWAGGER_API_MODULE_LIST', None)
+        if not tastypie_api_module_list:
             raise ImproperlyConfigured("Must define TASTYPIE_SWAGGER_API_MODULE in settings as path to a tastypie.api.Api instance")
-        path, attr = tastypie_api_module.rsplit('.', 1)
-        try:
-            tastypie_api = getattr(sys.modules[path], attr, None)
-        except KeyError:
-            raise ImproperlyConfigured("%s is not a valid python path" % path)
-        if not tastypie_api:
-            raise ImproperlyConfigured("%s is not a valid tastypie.api.Api instance" % tastypie_api_module)
-        self.tastypie_api = tastypie_api
+        for tastypie_api_module in tastypie_api_module_list:
+            path, attr = tastypie_api_module.rsplit('.', 1)
+            try:
+                tastypie_api = getattr(sys.modules[path], attr, None)
+            except KeyError:
+                raise ImproperlyConfigured("%s is not a valid python path" % path)
+            if not tastypie_api:
+                raise ImproperlyConfigured("%s is not a valid tastypie.api.Api instance" % tastypie_api_module)
+            self.tastypie_api_list.append(tastypie_api)
 
 
 class SwaggerApiDataMixin(object):
