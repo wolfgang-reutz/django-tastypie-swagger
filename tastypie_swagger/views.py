@@ -25,14 +25,16 @@ class TastypieApiMixin(object):
         if not tastypie_api_module_list:
             raise ImproperlyConfigured("Must define TASTYPIE_SWAGGER_API_MODULE in settings as path to a tastypie.api.Api instance")
         for tastypie_api_module in tastypie_api_module_list:
-            path, attr = tastypie_api_module.rsplit('.', 1)
+            path = tastypie_api_module['path']
+            obj = tastypie_api_module['obj']
+            func_name = tastypie_api_module['func_name']
             try:
-                tastypie_api = getattr(sys.modules[path], attr, None)
-                if not isinstance(tastypie_api, Api) and callable(tastypie_api):
-                    tastypie_api = tastypie_api()
+                tastypie_api = getattr(sys.modules[path], obj, None)
+                if func_name:
+                    tastypie_api = getattr(tastypie_api, func_name)()
             except KeyError:
                 raise ImproperlyConfigured("%s is not a valid python path" % path)
-            if not tastypie_api:
+            if not isinstance(tastypie_api, Api):
                 raise ImproperlyConfigured("%s is not a valid tastypie.api.Api instance" % tastypie_api_module)
             self.tastypie_api_list.append(tastypie_api)
 
@@ -93,7 +95,10 @@ class ResourcesView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
         context = super(ResourcesView, self).get_context_data(*args, **kwargs)
 
         # Construct schema endpoints from resources
-        apis = [{'path': '/%s' % name} for name in sorted(self.tastypie_api._registry.keys())]
+        apis = []
+        for tastypie_api in self.tastypie_api_list:
+            for name in sorted(tastypie_api._registry):
+                apis.append({'path': '/%s/%s' % (tastypie_api.api_name, name)})
         context.update({
             'basePath': self.request.build_absolute_uri(reverse('tastypie_swagger:schema')),
             'apis': apis,
@@ -110,12 +115,27 @@ class SchemaView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
 
     def get_context_data(self, *args, **kwargs):
         # Verify matching tastypie resource exists
+        api_name = kwargs.get('api_name', None)
         resource_name = kwargs.get('resource', None)
-        if not resource_name in self.tastypie_api._registry:
+        api_name_list = [api.api_name for api in self.tastypie_api_list]
+
+        if not api_name in api_name_list:
+            print api_name_list
+            print 'no api name'
+            raise Http404
+
+        for api in self.tastypie_api_list:
+            if api_name == api.api_name:
+                tastypie_api = api
+                break;
+
+        if not resource_name in tastypie_api._registry:
+            print tastypie_api._registry
+            print 'no resource name'
             raise Http404
 
         # Generate mapping from tastypie.resources.Resource.build_schema
-        resource = self.tastypie_api._registry.get(resource_name)
+        resource = tastypie_api._registry.get(resource_name)
         mapping = ResourceSwaggerMapping(resource)
 
         context = super(SchemaView, self).get_context_data(*args, **kwargs)
