@@ -28,14 +28,18 @@ Define **TASTYPIE_SWAGGER_API_MODULE_LIST** in your settings::
     TASTYPIE_SWAGGER_API_MODULE_LIST = (
         {'path': 'app_name.path',
          'obj': 'xxx',
+         'func_name': 'xxx'},
+
+        {'path': 'app_name.path',
+         'obj': 'xxx',
          'func_name': 'xxx'}
     )
 
 **TASTYPIE_SWAGGER_API_MODULE_LIST** is an iterable object.
 Each item is a dict.
-    path: It should be a payhon path can find your api instance, like polls.api(polls is your APP's name, there is a api.py in directory polls)
-    obj: It should be an Api instance or an instance who have a function to get an Api instance
-    func_name: if isinstance(obj, Api) is True, func_name should be ''
+path: It should be a payhon path can find your api instance, like polls.api(polls is your APP's name, there is a api.py in directory polls)
+obj: It should be an Api instance or an instance who have a function to get an Api instance
+func_name: if isinstance(obj, Api) is True, func_name should be ''
 
 Include in your urlconf with namespace **tastypie_swagger**::
 
