@@ -8,6 +8,20 @@ This package provides two things:
 1. An embedded instance of `Swagger UI`_ to point a URL to.
 2. Automatic `Resource Listing`_ and `API Declaration`_ generation that is consumed by #1
 
+Installing for Production
+=========================
+
+.. code-block::
+
+   pip install django-tastypie-swagger-ng
+
+Installing for Development
+==========================
+
+.. code-block::
+
+   git clone https://github.com/ifanrx/django-tastypie-swagger.git
+   pip install -e django-tastypie-swagger
 
 Usage
 =====
