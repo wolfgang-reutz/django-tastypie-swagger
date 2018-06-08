@@ -145,6 +145,15 @@ Tastypie 0.9.11 **ModelResource** fields do not respect the *blank* attribute on
 You can use `this ModelResource subclass <https://gist.github.com/4041352>`_ as a workaround to this issue.
 
 
+Swagger-UI Version
+==================
+
+https://github.com/swagger-api/swagger-ui/tree/v3.17.0
+
+OpenAPI-Specification
+=====================
+
+https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md
 
 
 
