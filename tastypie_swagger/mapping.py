@@ -390,7 +390,6 @@ class ResourceSwaggerMapping(object):
                 {'delete': self.build_new_detail_operation(method='delete')}
             )
         if not operations:
-            print operations
             operations = self.fake_operation
         return {
             endpoint: operations
