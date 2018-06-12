@@ -113,11 +113,8 @@ class ResourcesView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
             for name in sorted(tastypie_api._registry):
                 mapping = ResourceSwaggerMapping(tastypie_api._registry.get(name))
                 # 一个 resource 可能有多个 URL
-                print mapping.resource
                 doc = mapping.resource.__doc__
                 if doc:
-                    import json
-                    print doc
                     try:
                         paths.update(json.loads(doc))
                     except ValueError:
