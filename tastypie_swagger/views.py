@@ -1,3 +1,4 @@
+# _*_ coding:utf-8 _*_
 import sys
 import json
 
@@ -46,10 +47,22 @@ class SwaggerApiDataMixin(object):
 
     def get_context_data(self, *args, **kwargs):
         context = super(SwaggerApiDataMixin, self).get_context_data(*args, **kwargs)
+
         context.update({
-            # TODO: How should versions be controlled?
-            'apiVersion': '0.1',
-            'swaggerVersion': '1.1',
+            'openapi': '3.0.1',
+            'info': {
+                'version': '1.0.0',
+                "description": "ifanr 后端所有的 API",
+                'title': 'ifanr API Center',
+                'license': {
+                    'name': 'Private'
+                }
+            },
+            'servers': [
+                {
+                    'url': self.request.build_absolute_uri('/')
+                }
+            ],
         })
         return context
 
@@ -86,62 +99,35 @@ class SwaggerView(TastypieApiMixin, TemplateView):
 
 class ResourcesView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
     """
-    Provide a top-level resource listing for swagger
+    Provide json data to swagger-ui page
 
-    This JSON must conform to https://github.com/wordnik/swagger-core/wiki/Resource-Listing
+    This JSON must conform to https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md
     """
 
     def get_context_data(self, *args, **kwargs):
         context = super(ResourcesView, self).get_context_data(*args, **kwargs)
 
         # Construct schema endpoints from resources
-        apis = []
+        paths = {}
         for tastypie_api in self.tastypie_api_list:
             for name in sorted(tastypie_api._registry):
-                apis.append({'path': '/%s/%s' % (tastypie_api.api_name, name)})
+                mapping = ResourceSwaggerMapping(tastypie_api._registry.get(name))
+                # 一个 resource 可能有多个 URL
+                print mapping.resource
+                doc = mapping.resource.__doc__
+                if doc:
+                    import json
+                    print doc
+                    try:
+                        paths.update(json.loads(doc))
+                    except ValueError:
+                        paths.update(mapping.build_paths())
+                else:
+                    paths.update(mapping.build_paths())
+
         context.update({
-            'basePath': self.request.build_absolute_uri(reverse('tastypie_swagger:schema')),
-            'apis': apis,
+            'paths': paths,
         })
+
         return context
 
-
-class SchemaView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
-    """
-    Provide an individual resource schema for swagger
-
-    This JSON must conform to https://github.com/wordnik/swagger-core/wiki/API-Declaration
-    """
-
-    def get_context_data(self, *args, **kwargs):
-        # Verify matching tastypie resource exists
-        api_name = kwargs.get('api_name', None)
-        resource_name = kwargs.get('resource', None)
-        api_name_list = [api.api_name for api in self.tastypie_api_list]
-
-        if not api_name in api_name_list:
-            print api_name_list
-            print 'no api name'
-            raise Http404
-
-        for api in self.tastypie_api_list:
-            if api_name == api.api_name:
-                tastypie_api = api
-                break;
-
-        if not resource_name in tastypie_api._registry:
-            print tastypie_api._registry
-            print 'no resource name'
-            raise Http404
-
-        # Generate mapping from tastypie.resources.Resource.build_schema
-        resource = tastypie_api._registry.get(resource_name)
-        mapping = ResourceSwaggerMapping(resource)
-
-        context = super(SchemaView, self).get_context_data(*args, **kwargs)
-        context.update({
-            'basePath': '/',
-            'apis': mapping.build_apis(),
-            'models': mapping.build_models()
-        })
-        return context

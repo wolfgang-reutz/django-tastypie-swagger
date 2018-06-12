@@ -3,7 +3,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Swagger UI</title>
+    <title>ifanr API Center</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,700|Source+Code+Pro:300,600|Titillium+Web:400,600,700" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}tastypie_swagger/css/swagger-ui.css" >
     <link rel="icon" type="image/png" href="{{ STATIC_URL }}tastypie_swagger/images/favicon-32x32.png" sizes="32x32" />
@@ -41,7 +41,7 @@
 
       // Build a system
       const ui = SwaggerUIBundle({
-        url: "http://petstore.swagger.io/v2/swagger.json",
+        url: "{% url 'tastypie_swagger:resources' %}",
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [

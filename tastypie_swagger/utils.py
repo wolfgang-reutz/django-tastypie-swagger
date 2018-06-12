@@ -16,5 +16,7 @@ def urljoin_forced(base, path, **kwargs):
     """
     urljoin base with path, except append '/' to base if it doesnt exist
     """
+    if not base:
+        base = '/'
     base = base.endswith('/') and base or '%s/' % base
     return urljoin(base, path, **kwargs)
