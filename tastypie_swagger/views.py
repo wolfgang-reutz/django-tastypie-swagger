@@ -97,6 +97,11 @@ class SwaggerView(TastypieApiMixin, TemplateView):
 
     template_name = 'tastypie_swagger/index.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(SwaggerView, self).get_context_data(**kwargs)
+        context['supported_submit_methods'] = getattr(settings, 'TASTYPIE_SUPPORTED_SUBMIT_METHODS', [])
+        return context
+
 
 class ResourcesView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
     """

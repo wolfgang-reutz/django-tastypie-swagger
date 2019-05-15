@@ -51,10 +51,11 @@
         plugins: [
           SwaggerUIBundle.plugins.DownloadUrl
         ],
-        layout: "StandaloneLayout"
-      })
+        layout: "StandaloneLayout",
+        supportedSubmitMethods: "{{ supported_submit_methods }}",
+      });
 
-      window.ui = ui
+      window.ui = ui;
     }
   </script>
   </body>

@@ -48,7 +48,15 @@ Define **TASTYPIE_SWAGGER_API_MODULE_LIST** in your settings::
          'func_name': 'xxx'}
     )
 
-Optionally define **TASTYPIE_SWAGGER_INFO** in your settings, see https://swagger.io/specification/#infoObject for details:
+Optionally define **TASTYPIE_SUPPORTED_SUBMIT_METHODS** in your settings otherwise the "try me" button is ommitted for all operations (better not accidentially delete stuff in your API ;-) )::
+
+    TASTYPIE_SUPPORTED_SUBMIT_METHODS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
+
+safe methods only::
+
+    TASTYPIE_SUPPORTED_SUBMIT_METHODS = ["get", "options", "head", "trace"]
+
+Optionally define **TASTYPIE_SWAGGER_INFO** in your settings, see https://swagger.io/specification/#infoObject for details::
 
     TASTYPIE_SWAGGER_INFO = {
         'version': '1.0.0',
