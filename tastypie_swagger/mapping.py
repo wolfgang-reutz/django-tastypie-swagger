@@ -2,10 +2,12 @@
 import datetime
 
 from django.db.models.sql.constants import QUERY_TERMS
-from django.utils.encoding import force_unicode
+from django.utils.encoding import force_text
 from tastypie import fields
 
 from .utils import trailing_slash_or_none, urljoin_forced
+
+from pprint import pformat
 
 # Ignored POST fields
 IGNORED_FIELDS = ['id', ]
@@ -42,15 +44,16 @@ class ResourceSwaggerMapping(object):
         self.schema = self.resource.build_schema()
         self.fake_operation = {
             'get': {
-                'description': u'信息无法获取',
+                'description': u"Fake operation",
                 'tags': [
-                    self.resource.__module__.split('.')[0],
-                    self.resource.api_name
+                    # self.resource.__module__.split('.')[0],
+                    # self.resource.api_name,
+                    'Fake',
                 ],
                 "responses": {
-                    'default': {
-                        'description': u'自动生成',
-                    },
+                    # 'default': {
+                    #     'description': u'automatically generated',
+                    # },
                 },
             }
         }
@@ -97,7 +100,10 @@ class ResourceSwaggerMapping(object):
     def build_parameter(self, in_=None, name='', required=True, description=''):
         if not in_:
             in_ = 'query'
-            description = ''.join([description, u'[注意：参数的位置是自动生成的，可能不准确。]'])
+            description = ''.join([
+                description,
+                u"[Note: The location of the parameters is automatically generated and may not be accurate.]"
+            ])
         parameter = {
             'in': in_,
             'name': name,
@@ -116,11 +122,11 @@ class ResourceSwaggerMapping(object):
         parameters = []
         for name, field in self.schema['fields'].items():
             # Ignore readonly fields
-            if not field['readonly'] and not name in IGNORED_FIELDS:
+            if not field['readonly'] and name not in IGNORED_FIELDS:
                 parameters.append(self.build_parameter(
                     name=name,
                     required=not field['blank'],
-                    description=force_unicode(field['help_text']),
+                    description=force_text(field['help_text']),
                 ))
         return parameters
 
@@ -140,7 +146,7 @@ class ResourceSwaggerMapping(object):
             'in': "query",
             'name': "order_by",
             'required': False,
-            'description': unicode(
+            'description': str(
                 "Orders the result set based on the selection. Ascending order by default, prepending the '-' sign change the sorting order to descending"),
         }
 
@@ -161,7 +167,7 @@ class ResourceSwaggerMapping(object):
                     in_="query",
                     name=name,
                     required=False,
-                    description=force_unicode(desc),
+                    description=force_text(desc),
                 ))
         if 'filtering' in self.schema and method.upper() == 'GET':
             for name, field in self.schema['filtering'].items():
@@ -172,9 +178,8 @@ class ResourceSwaggerMapping(object):
                         if getattr(self.resource._meta, 'queryset',
                                    None) is not None:
                             # Get the possible query terms from the current QuerySet.
-                            if hasattr(
-                                self.resource._meta.queryset.query.query_terms,
-                                'keys'):
+                            if hasattr(self.resource._meta.queryset.query.query_terms,
+                                       'keys'):
                                 # Django 1.4 & below compatibility.
                                 field = self.resource._meta.queryset.query.query_terms.keys()
                             else:
@@ -191,8 +196,9 @@ class ResourceSwaggerMapping(object):
                     elif field == ALL_WITH_RELATIONS:  # Show all params from related model
                         # Add a subset of filter only foreign-key compatible on the relation itself.
                         # We assume foreign keys are only int based.
-                        field = ['gt', 'in', 'gte', 'lt', 'lte',
-                                 'exact']  # TODO This could be extended by checking the actual type of the relational field, but afaik it's also an issue on tastypie.
+                        field = ['gt', 'in', 'gte', 'lt', 'lte', 'exact']
+                        # TODO This could be extended by checking the actual type of the relational
+                        # field, but afaik it's also an issue on tastypie.
                         try:
                             related_resource = self.resource.fields[
                                 name].get_related_resource(None)
@@ -206,18 +212,19 @@ class ResourceSwaggerMapping(object):
 
                 if isinstance(field, list):
                     # Skip if this is an incorrect filter
-                    if name not in self.schema['fields']: continue
-
+                    if name not in self.schema['fields']:
+                        continue
                     schema_field = self.schema['fields'][name]
                     for query in field:
                         if query == 'exact':
-                            description = force_unicode(
+                            description = force_text(
                                 schema_field['help_text'])
                             dataType = schema_field['type']
                             # Use a better description for related models with exact filter
                             if dataType == 'related':
                                 # Assume that related pk is an integer
-                                # TODO if youre not using integer ID for pk then we need to look this up somehow
+                                # TODO if youre not using integer ID for pk then we need to look
+                                # this up somehow
                                 dataType = 'integer'
                                 description = 'ID of related resource'
                             parameters.append(self.build_parameter(
@@ -231,7 +238,7 @@ class ResourceSwaggerMapping(object):
                                 in_="query",
                                 name="%s%s__%s" % (prefix, name, query),
                                 required=False,
-                                description=force_unicode(
+                                description=force_text(
                                     schema_field['help_text']),
                             ))
 
@@ -261,7 +268,7 @@ class ResourceSwaggerMapping(object):
                 in_="query",
                 name=name,
                 required=field.get("required", True),
-                description=force_unicode(field.get("description", "")),
+                description=force_text(field.get("description", "")),
             ))
 
         # For non-standard API functionality, allow the User to declaritively
@@ -274,7 +281,7 @@ class ResourceSwaggerMapping(object):
                     in_='query',
                     name=name,
                     required=field['required'],
-                    description=unicode(field['description'])
+                    description=str(field['description'])
                 ))
 
         return parameters
@@ -294,18 +301,20 @@ class ResourceSwaggerMapping(object):
 
     def build_new_detail_operation(self, method='get'):
         return {
-            'summary': self.get_operation_summary(detail=False, method=method),
+            'summary': self.get_operation_summary(detail=True, method=method),
+            'description': self.resource.__doc__,
             'tags': [
-                self.resource.__module__.split('.')[0],
-                self.resource.api_name
+                # self.resource.__module__.split('.')[0],
+                # self.resource.api_name,
+                self.resource._meta.object_class.__name__
             ],
             'parameters': [
                 self.build_parameter(in_='path', name=self._detail_uri_name(),
                                      description='ID of resource')],
             'responses': {
-                'default': {
-                    'description': u'自动生成',
-                },
+                # 'default': {
+                #     'description': u"automatically generated",
+                # },
             }
 
         }
@@ -323,15 +332,17 @@ class ResourceSwaggerMapping(object):
     def build_new_list_operation(self, method='get'):
         return {
             'summary': self.get_operation_summary(detail=False, method=method),
+            'description': self.resource.__doc__,
             'tags': [
-                self.resource.__module__.split('.')[0],
-                self.resource.api_name
+                # self.resource.__module__.split('.')[0],
+                # self.resource.api_name,
+                self.resource._meta.object_class.__name__
             ],
             'parameters': self.build_parameters_for_list(method=method),
             'responses': {
-                'default': {
-                    'description': u'自动生成',
-                },
+                # 'default': {
+                #     'description': u"automatically generated",
+                # },
             }
 
         }
@@ -355,17 +366,18 @@ class ResourceSwaggerMapping(object):
         return {
             'summary': extra_action.get("summary", ""),
             'tags': [
-                self.resource.__module__.split('.')[0],
-                self.resource.api_name
+                # self.resource.__module__.split('.')[0],
+                # self.resource.api_name,
+                self.resource._meta.object_class.__name__
             ],
             'parameters': self.build_parameters_from_extra_action(
                 method=extra_action.get('http_method'),
                 fields=extra_action.get('fields'),
                 resource_type=extra_action.get("resource_type", "view")),
             'responses': {
-                'default': {
-                    'description': u'自动生成',
-                },
+                # 'default': {
+                #     'description': u"automatically generated",
+                # },
             }
 
         }
@@ -444,6 +456,11 @@ class ResourceSwaggerMapping(object):
         paths.update(self.build_extra_paths())
         return paths
 
+    def build_global_tag(self):
+        tag = {'name': self.resource._meta.object_class.__name__,
+               'description': self.resource._meta.object_class.__doc__}
+        return tag
+
     def build_property(self, name, type, description=""):
         prop = {
             name: {
@@ -478,7 +495,7 @@ class ResourceSwaggerMapping(object):
                 field.get('type'),
                 # note: 'help_text' is a Django proxy which must be wrapped
                 # in unicode *specifically* to get the actual help text.
-                force_unicode(field.get('help_text', '')),
+                force_text(field.get('help_text', '')),
             )
             )
         return properties

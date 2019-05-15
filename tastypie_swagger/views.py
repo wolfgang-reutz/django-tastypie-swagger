@@ -12,6 +12,7 @@ from tastypie.api import Api
 
 from .mapping import ResourceSwaggerMapping
 
+from pprint import pformat
 
 class TastypieApiMixin(object):
     """
@@ -19,6 +20,7 @@ class TastypieApiMixin(object):
 
     Python path must be defined in settings as TASTYPIE_SWAGGER_API_MODULE
     """
+
     def __init__(self, *args, **kwargs):
         super(TastypieApiMixin, self).__init__(*args, **kwargs)
         self.tastypie_api_list = []
@@ -47,20 +49,19 @@ class SwaggerApiDataMixin(object):
 
     def get_context_data(self, *args, **kwargs):
         context = super(SwaggerApiDataMixin, self).get_context_data(*args, **kwargs)
-
         context.update({
             'openapi': '3.0.1',
-            'info': {
+            'info': getattr(settings, 'TASTYPIE_SWAGGER_INFO', {
                 'version': '1.0.0',
                 "description": "ifanr 后端所有的 API",
                 'title': 'ifanr API Center',
                 'license': {
                     'name': 'Private'
                 }
-            },
+            }),
             'servers': [
                 {
-                    'url': self.request.build_absolute_uri('/')
+                   'url': self.request.build_absolute_uri('/')
                 }
             ],
         })
@@ -78,7 +79,7 @@ class JSONView(TemplateView):
         Returns a response with a template rendered with the given context.
         """
 
-        for k in ['params','view']:
+        for k in ['params', 'view']:
             if k in context:
                 del context[k]
 
@@ -101,7 +102,8 @@ class ResourcesView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
     """
     Provide json data to swagger-ui page
 
-    This JSON must conform to https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md
+    This JSON must conform to
+    https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md
     """
 
     def get_context_data(self, *args, **kwargs):
@@ -109,8 +111,9 @@ class ResourcesView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
 
         # Construct schema endpoints from resources
         paths = {}
+        tags = []
         for tastypie_api in self.tastypie_api_list:
-            for name in sorted(tastypie_api._registry):
+            for name in sorted(tastypie_api._registry.keys()):
                 mapping = ResourceSwaggerMapping(tastypie_api._registry.get(name))
                 # 一个 resource 可能有多个 URL
                 doc = mapping.resource.__doc__
@@ -121,10 +124,12 @@ class ResourcesView(TastypieApiMixin, SwaggerApiDataMixin, JSONView):
                         paths.update(mapping.build_paths())
                 else:
                     paths.update(mapping.build_paths())
-
+                tag = mapping.build_global_tag()
+                if (not any(x['name'] == tag['name'] for x in tags)):
+                    tags.append(tag)
         context.update({
             'paths': paths,
         })
-
+        if len(tags) > 0:
+            context.update({'tags': tags})
         return context
-

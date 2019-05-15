@@ -1,4 +1,9 @@
-from urlparse import urljoin
+try:
+    # python 3.x
+    from urllib.parse import urljoin
+except ModuleNotFoundError:
+    # python 2.x
+    from urlparse import urljoin
 
 from django.conf import settings
 
