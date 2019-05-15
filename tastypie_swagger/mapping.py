@@ -51,9 +51,9 @@ class ResourceSwaggerMapping(object):
                     'Fake',
                 ],
                 "responses": {
-                    # 'default': {
-                    #     'description': u'automatically generated',
-                    # },
+                    'default': {
+                        'description': u'automatically generated',
+                    },
                 },
             }
         }
@@ -312,9 +312,9 @@ class ResourceSwaggerMapping(object):
                 self.build_parameter(in_='path', name=self._detail_uri_name(),
                                      description='ID of resource')],
             'responses': {
-                # 'default': {
-                #     'description': u"automatically generated",
-                # },
+                'default': {
+                    'description': u"automatically generated",
+                },
             }
 
         }
@@ -340,9 +340,9 @@ class ResourceSwaggerMapping(object):
             ],
             'parameters': self.build_parameters_for_list(method=method),
             'responses': {
-                # 'default': {
-                #     'description': u"automatically generated",
-                # },
+                'default': {
+                    'description': u"automatically generated",
+                },
             }
 
         }
@@ -375,9 +375,9 @@ class ResourceSwaggerMapping(object):
                 fields=extra_action.get('fields'),
                 resource_type=extra_action.get("resource_type", "view")),
             'responses': {
-                # 'default': {
-                #     'description': u"automatically generated",
-                # },
+                'default': {
+                    'description': u"automatically generated",
+                },
             }
 
         }

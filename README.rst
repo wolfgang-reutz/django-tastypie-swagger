@@ -38,7 +38,6 @@ Add to INSTALLED_APPS::
 
 Define **TASTYPIE_SWAGGER_API_MODULE_LIST** in your settings::
 
-    
     TASTYPIE_SWAGGER_API_MODULE_LIST = (
         {'path': 'app_name.path',
          'obj': 'xxx',
@@ -48,6 +47,14 @@ Define **TASTYPIE_SWAGGER_API_MODULE_LIST** in your settings::
          'obj': 'xxx',
          'func_name': 'xxx'}
     )
+
+Optionally define **TASTYPIE_SWAGGER_INFO** in your settings, see https://swagger.io/specification/#infoObject for details:
+
+    TASTYPIE_SWAGGER_INFO = {
+        'version': '1.0.0',
+        'title': 'My awesome API',
+        'description': 'describe what it does',
+    }
 
 **TASTYPIE_SWAGGER_API_MODULE_LIST** is an iterable object.
 Each item is a dict.
